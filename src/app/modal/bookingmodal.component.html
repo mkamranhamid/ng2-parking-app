@@ -1,0 +1,14 @@
+<h1 md-dialog-title>Your Booking Timing</h1>
+<md-dialog-content>
+  <md-input-container class="example-full-width">
+    <input md-input placeholder="Slot#" value="slotbookdetails.id">
+  </md-input-container>
+  <md-input-container class="example-full-width">
+    <input md-input placeholder="date time" type="date" [(ngModel)]='slotbookdetails.timingAvailability'>
+  </md-input-container>
+  {{slotbookdetails | json}}
+</md-dialog-content>
+<md-dialog-actions>
+  <button (click)="dialogRef.close(slotbookdetails)">Yes</button>
+  <button md-dialog-close>No</button>
+</md-dialog-actions>

@@ -1,0 +1,30 @@
+  <!--<md-select placeholder="Select your Parking Place" [(ngModel)]="selectedValue" name="food">
+    <md-option *ngFor="let parkspace of parkingspaces" [value]="parkspace">
+      {{parkspace.place}}
+    </md-option>
+  </md-select>-->
+<div class="example-container">
+  <h3>Available Parking Areas</h3>
+  <div class="button-row" *ngFor="let parkspace of parkingspaces">
+    <button md-raised-button (click)='clickedParkingSpace(parkspace)'>{{parkspace.place}}</button>
+  </div>
+</div>
+<div class="box" *ngFor="let item of parkingSlots">
+  <div class="borderedBox" (click)='getParkingSpace(item)' [ngStyle]="{'cursor':item.availability?'pointer':'not-allowed'}">
+    <h3>{{ item.id }}</h3>
+  </div>
+</div>
+
+
+<table *ngIf='slotDetails'>
+  <tr>
+    <th>Slot</th>
+    <th>Availablity</th>
+    <th>Book</th>
+  </tr>
+  <tr>
+    <td>{{slotDetails?.id | json}}</td>
+    <td>{{slotDetails?.availability | json}}</td>
+    <td><button md-mini-fab (click)='bookSlot(slotDetails)'><md-icon>check</md-icon></button></td>
+  </tr>
+</table>

@@ -1,0 +1,6 @@
+<div *ngIf='issignedin'>
+    Get Your Parking
+</div>
+<div *ngIf='!issignedin'>
+    <button (click)="signout()">Signout</button>
+</div>
