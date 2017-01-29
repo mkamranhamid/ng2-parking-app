@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 import { MdDialog, MdDialogRef, MdDialogConfig } from '@angular/material';
-import { AngularFire, AuthProviders, AuthMethods } from 'angularfire2';
+import { AngularFire, AuthProviders, AuthMethods, FirebaseListObservable, FirebaseObjectObservable } from 'angularfire2';
 
 import { Login } from '../login/login';
+import { ParkingSlotObject } from './home';
 import { BookingModalComponent } from '../modal/bookingmodal.component';
 
 @Component({
@@ -11,23 +12,27 @@ import { BookingModalComponent } from '../modal/bookingmodal.component';
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent {
-  constructor(public dialog: MdDialog) {}
-  /*parkingspaces = [
-    'A','B','C'
-  ];*/
+  items: FirebaseListObservable<any[]>;
+  parkingspaces: FirebaseListObservable<any[]>;
+  bookingSlot: FirebaseObjectObservable<any[]>;
+  constructor(public dialog: MdDialog,public af: AngularFire) {
+    this.items = af.database.list('/parkingspaces');
+    this.parkingspaces = af.database.list('/parkingspaces');
+    console.log(this.items)
+  }
 
   //ngOnInit() { this.logIt(`OnInit`); }
-  parkingSlots: [any];
+  parkingSlots;
   dialogRef: MdDialogRef<BookingModalComponent>;
   slotDetails: Object;
   newParkingArr: any;
-  parkingspaces: [any] = [
-    { place: 'A', parkingSlots: { a: { id: 'a', availability: true, timingAvailability: '' }, b: { id: 'b', availability: false, timingAvailability: '' }, c: { id: 'c', availability: true, timingAvailability: '' } }, availability: true, timingAvailability: '' },
-    { place: 'B', parkingSlots: { a: { id: 'aa', availability: false, timingAvailability: '' }, b: { id: 'bb', availability: true, timingAvailability: '' }, c: { id: 'cc', availability: true, timingAvailability: '' } }, availability: true, timingAvailability: '' },
-    { place: 'C', parkingSlots: { a: { id: 'ab', availability: true, timingAvailability: '' }, b: { id: 'bc', availability: true, timingAvailability: '' }, c: { id: 'cd', availability: false, timingAvailability: '' } }, availability: true, timingAvailability: '' },
-    { place: 'D', parkingSlots: { a: { id: 'a1', availability: true, timingAvailability: '' }, b: { id: 'b1', availability: false, timingAvailability: '' }, c: { id: 'c1', availability: true, timingAvailability: '' } }, availability: true, timingAvailability: '' },
-    { place: 'E', parkingSlots: { a: { id: 'ab1', availability: false, timingAvailability: '' }, b: { id: 'bc1', availability: true, timingAvailability: '' }, c: { id: 'cd1', availability: true, timingAvailability: '' } }, availability: true, timingAvailability: '' }
-  ];
+  /*parkingspaces: [any] = [
+    { place: 'A', parkingSlots: { a: { id: 'a', availability: true, timingAvailability: '', dateAvailability: '' }, b: { id: 'b', availability: false, timingAvailability: '', dateAvailability: '' }, c: { id: 'c', availability: true, timingAvailability: '', dateAvailability: '' } }, availability: true, timingAvailability: '', dateAvailability: '' },
+    { place: 'B', parkingSlots: { a: { id: 'aa', availability: false, timingAvailability: '', dateAvailability: '' }, b: { id: 'bb', availability: true, timingAvailability: '', dateAvailability: '' }, c: { id: 'cc', availability: true, timingAvailability: '', dateAvailability: '' } }, availability: true, timingAvailability: '', dateAvailability: '' },
+    { place: 'C', parkingSlots: { a: { id: 'ab', availability: true, timingAvailability: '', dateAvailability: '' }, b: { id: 'bc', availability: true, timingAvailability: '', dateAvailability: '' }, c: { id: 'cd', availability: false, timingAvailability: '', dateAvailability: '' } }, availability: true, timingAvailability: '', dateAvailability: '' },
+    { place: 'D', parkingSlots: { a: { id: 'a1', availability: true, timingAvailability: '', dateAvailability: '' }, b: { id: 'b1', availability: false, timingAvailability: '', dateAvailability: '' }, c: { id: 'c1', availability: true, timingAvailability: '', dateAvailability: '' } }, availability: true, timingAvailability: '', dateAvailability: '' },
+    { place: 'E', parkingSlots: { a: { id: 'ab1', availability: false, timingAvailability: '', dateAvailability: '' }, b: { id: 'bc1', availability: true, timingAvailability: '', dateAvailability: '' }, c: { id: 'cd1', availability: true, timingAvailability: '', dateAvailability: '' } }, availability: true, timingAvailability: '', dateAvailability: '' }
+  ];*/
   logIt(msg: string) {
     this.parkingspaces.map((d, i) => {
       let slotArr = [];
@@ -39,6 +44,7 @@ export class HomeComponent {
     });
   }
   clickedParkingSpace(val) {
+    this.dialog.closeAll()
     console.log(val);
     let slotArr = [];
     for (var key in val.parkingSlots) {
@@ -48,6 +54,7 @@ export class HomeComponent {
     this.parkingSlots = val.parkingSlots;
   }
   getParkingSpace(slot) {
+    this.dialog.closeAll()
     if (slot.availability) {
       console.log(slot);
       this.slotDetails = slot;
@@ -56,13 +63,21 @@ export class HomeComponent {
     }
   }
   bookSlot(slotbookdetails) {
-    console.log(slotbookdetails)
-    this.dialogRef =  this.dialog.open(BookingModalComponent);
-    this.dialogRef.componentInstance.slotbookdetails = slotbookdetails;
-    this.dialogRef.afterClosed().subscribe(result => {
-      console.log('result: ' + result);
-      this.dialogRef = null;
-    });
+    if (slotbookdetails.availability) {
+      console.log(slotbookdetails)
+      this.dialogRef = this.dialog.open(BookingModalComponent);
+      this.dialogRef.componentInstance.slotbookdetails = slotbookdetails;
+      this.dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          let uidOfSelectedParkingPlace = this.parkingSlots.id;
+          let uidOfSelectedSlot = result.id;
+          this.bookingSlot = this.af.database.object(`/parkingspaces/${uidOfSelectedParkingPlace}/${uidOfSelectedSlot}/`);
+          this.bookingSlot.set(result);
+          console.log('result: ', result);
+          this.dialogRef = null;
+        }
+      });
+    }
   }
 }
 /*

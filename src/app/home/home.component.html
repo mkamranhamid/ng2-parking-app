@@ -4,8 +4,9 @@
     </md-option>
   </md-select>-->
 <div class="example-container">
+  
   <h3>Available Parking Areas</h3>
-  <div class="button-row" *ngFor="let parkspace of parkingspaces">
+  <div class="button-row" *ngFor="let parkspace of parkingspaces  | async">
     <button md-raised-button (click)='clickedParkingSpace(parkspace)'>{{parkspace.place}}</button>
   </div>
 </div>
@@ -25,6 +26,6 @@
   <tr>
     <td>{{slotDetails?.id | json}}</td>
     <td>{{slotDetails?.availability | json}}</td>
-    <td><button md-mini-fab (click)='bookSlot(slotDetails)'><md-icon>check</md-icon></button></td>
+    <td><button md-mini-fab (click)='bookSlot(slotDetails)'><md-icon *ngIf="slotDetails?.availability">check</md-icon><md-icon *ngIf="!slotDetails?.availability">block</md-icon></button></td>
   </tr>
 </table>
