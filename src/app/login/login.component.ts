@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import {MdSnackBar} from '@angular/material';
-import { AngularFire, AuthProviders, AuthMethods, FirebaseListObservable } from 'angularfire2';
+import { AngularFire, AuthProviders, AuthMethods, FirebaseListObservable, FirebaseObjectObservable } from 'angularfire2';
 
 import { Login, SignupSchema } from '../login/login';
 @Component({
@@ -10,13 +10,13 @@ import { Login, SignupSchema } from '../login/login';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent  {
-  users: FirebaseListObservable<any[]>;
+  users: FirebaseObjectObservable<any[]>;
   constructor(
     public af: AngularFire,
     private router: Router,
     public snackBar: MdSnackBar
     ) {
-      this.users = af.database.list('/users');
+      
     }
   signedIn:boolean = true;
   credentialsignup:any;
@@ -41,8 +41,9 @@ export class LoginComponent  {
       {
         provider: AuthProviders.Password,
         method: AuthMethods.Password,
-      }).then(()=>{
+      }).then((data)=>{
         console.log('signed in')
+        sessionStorage.setItem('uid',data.uid);
         this.router.navigate(['/home']);
       });
     this.signedIn = false;
@@ -53,13 +54,14 @@ export class LoginComponent  {
       delete credentials.password;
       credentials.uid = userCreated.uid;
       credentials.role = 'user';
-      this.users.push(credentials);
+      this.users = this.af.database.object(`/users/${credentials.uid}`);
+      this.users.set(credentials);
       this.snackbarmessage = `user ${credentials.name} created`;
       this.snackBar.open(this.snackbarmessage, 'Done', {
         duration: 2000,
       });
+      sessionStorage.setItem('uid',userCreated.uid);
       this.router.navigate(['/home']);
-      console.log('userCreated', userCreated)
     },(error)=>{
       this.snackbarmessage = `ERROR: while creating user ${credentials.name}`;
       this.snackBar.open(this.snackbarmessage, 'Dance', {

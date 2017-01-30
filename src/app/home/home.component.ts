@@ -14,6 +14,7 @@ import { BookingModalComponent } from '../modal/bookingmodal.component';
 export class HomeComponent {
   items: FirebaseListObservable<any[]>;
   parkingspaces: FirebaseListObservable<any[]>;
+  addSelectedParkingSlotToUser: FirebaseObjectObservable<any[]>;
   bookingSlot: FirebaseObjectObservable<any[]>;
   constructor(public dialog: MdDialog,public af: AngularFire) {
     this.items = af.database.list('/parkingspaces');
@@ -26,6 +27,8 @@ export class HomeComponent {
   dialogRef: MdDialogRef<BookingModalComponent>;
   slotDetails: Object;
   newParkingArr: any;
+  sessionUid:string = sessionStorage.getItem('uid'); 
+  uidOfParkingArea:string;
   /*parkingspaces: [any] = [
     { place: 'A', parkingSlots: { a: { id: 'a', availability: true, timingAvailability: '', dateAvailability: '' }, b: { id: 'b', availability: false, timingAvailability: '', dateAvailability: '' }, c: { id: 'c', availability: true, timingAvailability: '', dateAvailability: '' } }, availability: true, timingAvailability: '', dateAvailability: '' },
     { place: 'B', parkingSlots: { a: { id: 'aa', availability: false, timingAvailability: '', dateAvailability: '' }, b: { id: 'bb', availability: true, timingAvailability: '', dateAvailability: '' }, c: { id: 'cc', availability: true, timingAvailability: '', dateAvailability: '' } }, availability: true, timingAvailability: '', dateAvailability: '' },
@@ -52,6 +55,7 @@ export class HomeComponent {
     }
     val.parkingSlots = slotArr;
     this.parkingSlots = val.parkingSlots;
+    this.uidOfParkingArea = val.id;
   }
   getParkingSpace(slot) {
     this.dialog.closeAll()
@@ -69,10 +73,13 @@ export class HomeComponent {
       this.dialogRef.componentInstance.slotbookdetails = slotbookdetails;
       this.dialogRef.afterClosed().subscribe(result => {
         if (result) {
+          let selectedSlot = result;
           let uidOfSelectedParkingPlace = this.parkingSlots.id;
           let uidOfSelectedSlot = result.id;
-          this.bookingSlot = this.af.database.object(`/parkingspaces/${uidOfSelectedParkingPlace}/${uidOfSelectedSlot}/`);
+          this.bookingSlot = this.af.database.object(`/parkingspaces/${this.uidOfParkingArea}/parkingSlots/${uidOfSelectedSlot}/`);
           this.bookingSlot.set(result);
+          this.addSelectedParkingSlotToUser = this.af.database.object(`/users/${this.sessionUid}/selectedSlot/`);
+          this.addSelectedParkingSlotToUser.set(result);
           console.log('result: ', result);
           this.dialogRef = null;
         }
